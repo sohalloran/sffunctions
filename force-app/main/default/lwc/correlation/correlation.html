@@ -1,0 +1,16 @@
+<template>
+  <div class="slds-m-around_medium">
+    <p>correlation results</p>
+
+    {results} {error}
+    <template if:true={results}>
+      <template for:each={results} for:item="r">
+        <p key={r.Id}>{r.Name}</p>
+        ***
+      </template>
+    </template>
+    <template if:true={error}>
+      <p>{error}</p>
+    </template>
+  </div>
+</template>
