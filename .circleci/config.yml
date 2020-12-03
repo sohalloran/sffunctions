@@ -38,7 +38,7 @@ jobs:
           scratch-config: ./config/project-scratch-def.json
       - run:
           name: Deploy project to scratch org
-          command: sfdx force:source:push -u circleci-job
+          command: sfdx force:source:push -f -u circleci-job
       - run:
           name: Tests
           command: |
