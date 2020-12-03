@@ -68,8 +68,8 @@ module.exports = async function (event, context, logger) {
   }
 
   let url = `https://soh-wait.herokuapp.com/wait/`;
-  for (let i = 1; i < 50; i++) {
-    url = `https://soh-wait.herokuapp.com/wait/${i * 100}`;
+  for (let i = 1; i < 5; i++) {
+    url = `https://soh-wait.herokuapp.com/wait/${i * 10}`;
     try {
       logger.info(url);
       const slowresp = await axios.get(url);
