@@ -16,7 +16,8 @@
     "test": "node_modules/mocha/bin/mocha 'test/**/*.js'"
   },
   "dependencies": {
-    "@salesforce/salesforce-sdk": "^1.4.0"
+    "@salesforce/salesforce-sdk": "^1.4.0",
+    "axios": "^0.21.0"
   },
   "devDependencies": {
     "@types/chai": "^4.1.7",

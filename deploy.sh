@@ -12,3 +12,6 @@ echo "deploy $function"
 cd functions/$function
 sfdx evergreen:function:deploy -t $target -u $scratchorg
 cd ..
+
+#sfdx evergreen:secret:create my-secret -t SteveTarget --data pass=my-pass
+#sfdx evergreen:secret:app:bind --secret=my-secret -t SteveTarget

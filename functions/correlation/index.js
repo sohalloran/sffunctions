@@ -1,5 +1,5 @@
 const sdk = require("@salesforce/salesforce-sdk");
-
+const axios = require("axios");
 /**
  * Describe Correlation here.
  *
@@ -14,19 +14,18 @@ const sdk = require("@salesforce/salesforce-sdk");
  */
 module.exports = async function (event, context, logger) {
   const JOURNAL = [];
+  const r = [];
 
-  function phi([n00, n01, n10, n11]) {
-    return (
-      (n11 * n00 - n10 * n01) /
-      Math.sqrt((n10 + n11) * (n00 + n01) * (n01 + n11) * (n00 + n10))
-    );
-  }
+  const phi = ([n00, n01, n10, n11]) => {
+    // prettier-ignore
+    return  (n11 * n00 - n10 * n01) / Math.sqrt((n10 + n11) * (n00 + n01) * (n01 + n11) * (n00 + n10));
+  };
 
-  function addEntry(events, squirrel) {
-    JOURNAL.push({ events, squirrel });
-  }
+  const addEntry = (events, IsConverted) => {
+    JOURNAL.push({ events, IsConverted });
+  };
 
-  function journalEvents(journal) {
+  const journalEvents = (journal) => {
     let events = [];
     for (let entry of journal) {
       for (let event of entry.events) {
@@ -36,46 +35,55 @@ module.exports = async function (event, context, logger) {
       }
     }
     return events;
-  }
+  };
 
-  function tableFor(event, journal) {
+  const tableFor = (event, journal) => {
     let table = [0, 0, 0, 0];
     for (let i = 0; i < journal.length; i++) {
-      let entry = journal[i],
-        index = 0;
+      // prettier-ignore
+      let entry = journal[i], index = 0;
       if (entry.events.includes(event)) index += 1;
-      if (entry.squirrel) index += 2;
+      if (entry.IsConverted) index += 2;
       table[index] += 1;
     }
     return table;
-  }
-
-  addEntry(["work", "touched tree", "pizza", "running", "television"], false);
-  addEntry(
-    [
-      "work",
-      "ice cream",
-      "cauliflower",
-      "lasagna",
-      "touched tree",
-      "brushed teeth"
-    ],
-    false
-  );
-  addEntry(["weekend", "cycling", "break", "peanuts", "beer"], true);
-  addEntry(["weekend", "running", "break", "peanuts", "wine"], true);
+  };
 
   logger.info(
     `Invoking Correlation with payload ${JSON.stringify(event.data || {})}`
   );
 
-  const results = await context.org.data.query("SELECT Id, Name FROM Account");
-  logger.info(JSON.stringify(results));
+  const results = await context.org.data.query(
+    "SELECT Id, LeadSource, Industry, Rating, IsConverted FROM Lead"
+  );
 
-  let r = [];
-  for (let event of journalEvents(JOURNAL)) {
-    r.push(event + ":", phi(tableFor(event, JOURNAL)));
+  logger.info(`Invoking Correlation with payload ${JSON.stringify(results)}`);
+
+  for (let l of results.records) {
+    addEntry([l.LeadSource, l.Industry, l.Rating], l.IsConverted);
   }
+
+  for (let event of journalEvents(JOURNAL)) {
+    r.push(event + ":" + phi(tableFor(event, JOURNAL)));
+  }
+
+  let url = `https://soh-wait.herokuapp.com/wait/`;
+  for (let i = 1; i < 10; i++) {
+    url = `https://soh-wait.herokuapp.com/wait/${i * 100}`;
+    try {
+      logger.info(url);
+      const slowresp = await axios.get(url);
+      logger.info(slowresp.data);
+      r.push(` Response ->  ${JSON.stringify(slowresp.data)}`);
+    } catch (error) {
+      logger.info(error);
+      r.push(` Error -> ${error}`);
+    }
+  }
+
+  const mySecretsMap = context.secrets.get(`my-secret`);
+  const pass = mySecretsMap.get("pass");
+  r.push(` pass -> ${pass}`);
 
   return r;
 };
