@@ -17,6 +17,7 @@ describe("Unit Tests", () => {
     sandbox = sinon.createSandbox();
     mockContext = sandbox.createStubInstance(sdk.Context);
     mockContext.org = sandbox.createStubInstance(sdk.Org);
+    mockContext.org.unitOfWork = sandbox.createStubInstance(sdk.UnitOfWork);
     mockContext.org.data = sandbox.createStubInstance(sdk.DataApi);
     mockLogger = sandbox.createStubInstance(sdk.Logger);
     mockContext.logger = mockLogger;
